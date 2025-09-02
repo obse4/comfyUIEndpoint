@@ -1,0 +1,6 @@
+httpServer:
+  mode: "debug"
+log:
+  level: 0
+sqlite:
+  db: "endpoint.db"

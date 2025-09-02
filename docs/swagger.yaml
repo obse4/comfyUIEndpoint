@@ -1,0 +1,430 @@
+definitions:
+  model.Endpoint:
+    properties:
+      api_json:
+        description: comfyUI api用工作流
+        type: string
+      app_uid:
+        description: 暂时无用，多服务器时可以指定appUid
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      path:
+        type: string
+      sync_path:
+        type: string
+      updated_at:
+        type: string
+      workflow:
+        type: string
+    type: object
+  model.EndpointParam:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      endpoint_id:
+        type: integer
+      id:
+        type: integer
+      json_key:
+        description: 用于json解析的key
+        type: string
+      param_key:
+        type: string
+      param_name:
+        type: string
+      param_type:
+        description: string, int, float
+        type: string
+      updated_at:
+        type: string
+    type: object
+  request.ComfyAppCreateRequest:
+    properties:
+      addr:
+        description: 127.0.0.1:8000
+        type: string
+      description:
+        type: string
+    type: object
+  request.ComfyAppIndexRequest:
+    properties:
+      addr:
+        type: string
+      description:
+        type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
+    type: object
+  request.ComfyAppRemoveRequest:
+    properties:
+      id:
+        type: integer
+    type: object
+  request.ComfyAppRestartWsRequest:
+    properties:
+      id:
+        type: integer
+    type: object
+  request.ComfyAppUpdateRequest:
+    properties:
+      addr:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+    type: object
+  request.EndpointCreateRequest:
+    properties:
+      api_json:
+        description: comfy api版本json
+        type: string
+      description:
+        description: 描述
+        type: string
+      path:
+        description: 路径
+        type: string
+      workflow:
+        description: comfy 工作流
+        type: string
+    type: object
+  request.EndpointIndexRequest:
+    properties:
+      description:
+        type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
+      path:
+        type: string
+    type: object
+  request.EndpointParamFindRequest:
+    properties:
+      endpoint_id:
+        type: integer
+    type: object
+  request.EndpointParamItemRequest:
+    properties:
+      description:
+        type: string
+      json_key:
+        type: string
+      param_key:
+        type: string
+      param_name:
+        type: string
+      param_type:
+        description: string/int/float
+        type: string
+    type: object
+  request.EndpointParamSetRequest:
+    properties:
+      endpoint_id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/request.EndpointParamItemRequest'
+        type: array
+    type: object
+  response.ComfyAppCreateResponseItem:
+    properties:
+      addr:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      pending_num:
+        type: integer
+      running_num:
+        type: integer
+      uid:
+        type: string
+      updated_at:
+        type: string
+      ws_status:
+        description: close,connect
+        type: string
+    type: object
+  response.ComfyAppIndexResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.ComfyAppCreateResponseItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  response.CommonResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data: {}
+      message:
+        example: ok
+        type: string
+    type: object
+  response.EndpointIndexResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Endpoint'
+        type: array
+      total:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /comfyApp/create:
+    post:
+      consumes:
+      - application/json
+      description: comfy应用 创建
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ComfyAppCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: comfy应用 创建
+      tags:
+      - ComfyApp
+  /comfyApp/index:
+    post:
+      consumes:
+      - application/json
+      description: comfy应用 分页查询
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ComfyAppIndexRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.CommonResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ComfyAppIndexResponse'
+              type: object
+      summary: comfy应用 分页查询
+      tags:
+      - ComfyApp
+  /comfyApp/remove:
+    post:
+      consumes:
+      - application/json
+      description: comfy应用 删除
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ComfyAppRemoveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: comfy应用 删除
+      tags:
+      - ComfyApp
+  /comfyApp/update:
+    post:
+      consumes:
+      - application/json
+      description: comfy应用 更新
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ComfyAppUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: comfy应用 更新
+      tags:
+      - ComfyApp
+  /comfyApp/wsRestart:
+    post:
+      consumes:
+      - application/json
+      description: comfy应用 ws重启
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ComfyAppRestartWsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: comfy应用 ws重启
+      tags:
+      - ComfyApp
+  /endpoint/create:
+    post:
+      consumes:
+      - application/json
+      description: 端点 创建
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.EndpointCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: 端点 创建
+      tags:
+      - Endpoint
+  /endpoint/index:
+    post:
+      consumes:
+      - application/json
+      description: 端点 分页查询
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.EndpointIndexRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.CommonResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.EndpointIndexResponse'
+              type: object
+      summary: 端点 分页查询
+      tags:
+      - Endpoint
+  /endpoint/update:
+    post:
+      consumes:
+      - application/json
+      description: 端点 更新
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.EndpointCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: 端点 更新
+      tags:
+      - Endpoint
+  /endpointParam/find:
+    post:
+      consumes:
+      - application/json
+      description: 端点接口参数 查询
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.EndpointParamFindRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.CommonResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.EndpointParam'
+                  type: array
+              type: object
+      summary: 端点接口参数 查询
+      tags:
+      - EndpointParam
+  /endpointParam/set:
+    post:
+      consumes:
+      - application/json
+      description: 端点接口参数 配置
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.EndpointParamSetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回值
+          schema:
+            $ref: '#/definitions/response.CommonResponse'
+      summary: 端点接口参数 配置
+      tags:
+      - EndpointParam
+swagger: "2.0"

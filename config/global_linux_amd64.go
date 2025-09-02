@@ -1,0 +1,28 @@
+package config
+
+import (
+	"embed"
+
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	Global Config
+	//go:embed config.yaml
+	configFs embed.FS
+)
+
+func InitConfig() {
+	// 读取嵌入的配置文件
+	data, err := configFs.ReadFile("config.yaml")
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(data, &Global)
+
+	if err != nil {
+		panic(err)
+	}
+}

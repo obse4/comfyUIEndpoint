@@ -1,0 +1,11 @@
+*.exe
+.DS_Store
+makefile
+.vscode
+template
+auto_creation
+/config/local.config.yaml
+go.sum
+.idea
+endpoint.db
+comfyui_endpoint
