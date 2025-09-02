@@ -31,7 +31,9 @@ Content-Length: 60
   "description": "本地comfyUI"
 }
 ```
-    **注意：** addr只是填 ip+端口
+
+**注意：** addr只是填 ip+端口
+
 
 2. 创建端口 `http://localhost:9518/swagger/index.html#/Endpoint/post_endpoint_create`
 ```HTTP
@@ -47,10 +49,11 @@ Content-Length: 1374
   "workflow": ""
 }
 ```
-    **注意：** postman或者swagger调用时，请用`\"`代替`"`，避免json解析报错
+
+**注意：** postman或者swagger调用时，请用`\"`代替`"`，避免json解析报错
 
 
-3. 创建端点参数
+1. 创建端点参数
   - 查看创建的端点id,swagger `http://127.0.0.1:9518/swagger/index.html#/Endpoint/post_endpoint_index`
   - 创建端点参数 `http://127.0.0.1:9518/swagger/index.html#/EndpointParam/post_endpointParam_set`
   ```HTTP
@@ -103,4 +106,5 @@ Content-Length: 627
         "height": 400
     }
     ```
+    
     **注意：** uid为comfy应用的uid，必填项，其余参数为步骤3创建的端点参数
