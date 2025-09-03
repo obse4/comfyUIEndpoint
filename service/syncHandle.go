@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +17,7 @@ import (
 
 var GinRouter *gin.Engine
 var syncPromptMap = make(map[string]chan struct{ FileName string })
-
+var syncPromptMapMutex = sync.RWMutex{} // 添加读写锁
 func GetRouter() *gin.Engine {
 	return GinRouter
 }
@@ -148,12 +149,12 @@ func SyncHandle(ctx *gin.Context) {
 		})
 		return
 	}
-
+	syncPromptMapMutex.Lock()
 	resultChan := make(chan struct {
 		FileName string
 	}, 1)
 	syncPromptMap[promptRespData.PromptId] = resultChan
-
+	syncPromptMapMutex.Unlock()
 	// 等待数据
 	var res struct {
 		FileName string
@@ -161,7 +162,15 @@ func SyncHandle(ctx *gin.Context) {
 	select {
 	case res = <-resultChan:
 		// 正常处理
+		syncPromptMapMutex.Lock()
+		delete(syncPromptMap, promptRespData.PromptId)
+		close(resultChan)
+		syncPromptMapMutex.Unlock()
 	case <-time.After(60 * time.Second):
+		syncPromptMapMutex.Lock()
+		delete(syncPromptMap, promptRespData.PromptId)
+		close(resultChan)
+		syncPromptMapMutex.Unlock()
 		ctx.JSON(http.StatusOK, gin.H{
 			"code":    500,
 			"message": "等待超时",

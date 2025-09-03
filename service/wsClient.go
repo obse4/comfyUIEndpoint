@@ -70,10 +70,15 @@ func (w *wsClient) Start() error {
 
 						if filename != "" {
 							// 将结果写入 channel
+							syncPromptMapMutex.RLock() // 使用读锁
 							if ch, ok := syncPromptMap[promptId]; ok {
-								ch <- struct{ FileName string }{FileName: filename}
-								//? close(ch) // 关闭 channel 防止重复写入(因ws会发送两次相同prompt,此处不可关闭，会导致panic) 内存 待优化
+								select {
+								case ch <- struct{ FileName string }{FileName: filename}:
+								default:
+									logger.Debug("无法发送到 channel，可能已关闭或已满: %s", promptId)
+								}
 							}
+							syncPromptMapMutex.RUnlock()
 						}
 					}
 				}
