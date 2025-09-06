@@ -41,7 +41,7 @@ func EndpointCreate(ctx *gin.Context) {
 // @Description 端点 更新
 // @Accept json
 // @Produce json
-// @Param request body request.EndpointCreateRequest true "请求参数"
+// @Param request body request.EndpointUpdateRequest true "请求参数"
 // @Success 200 {object} response.CommonResponse "返回值"
 // @Router /endpoint/update [post]
 func EndpointUpdate(ctx *gin.Context) {

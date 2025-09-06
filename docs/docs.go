@@ -297,7 +297,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.EndpointCreateRequest"
+                            "$ref": "#/definitions/request.EndpointUpdateRequest"
                         }
                     }
                 ],
@@ -403,8 +403,8 @@ const docTemplate = `{
                     "description": "comfyUI api用工作流",
                     "type": "string"
                 },
-                "app_uid": {
-                    "description": "暂时无用，多服务器时可以指定appUid",
+                "callback_url": {
+                    "description": "http://127.0.0.1:8080/api/v1/callback",
                     "type": "string"
                 },
                 "created_at": {
@@ -530,6 +530,10 @@ const docTemplate = `{
                     "description": "comfy api版本json",
                     "type": "string"
                 },
+                "callback_url": {
+                    "description": "回调地址 example http://127.0.0.1:9999/v1/callback",
+                    "type": "string"
+                },
                 "description": {
                     "description": "描述",
                     "type": "string"
@@ -547,6 +551,10 @@ const docTemplate = `{
         "request.EndpointIndexRequest": {
             "type": "object",
             "properties": {
+                "callback_url": {
+                    "description": "回调地址 example http://127.0.0.1:9999/v1/callback",
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -601,6 +609,30 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/request.EndpointParamItemRequest"
                     }
+                }
+            }
+        },
+        "request.EndpointUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "api_json": {
+                    "description": "comfy api版本json",
+                    "type": "string"
+                },
+                "callback_url": {
+                    "description": "回调地址 example http://127.0.0.1:9999/v1/callback",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "描述",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "workflow": {
+                    "description": "comfy 工作流",
+                    "type": "string"
                 }
             }
         },

@@ -43,6 +43,7 @@ func (s *endpointService) Create(p request.EndpointCreateRequest) error {
 		Description: p.Description,
 		ApiJson:     p.ApiJson,
 		Workflow:    p.Workflow,
+		CallbackUrl: p.CallbackUrl,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}).Error
@@ -53,7 +54,7 @@ func (s *endpointService) Create(p request.EndpointCreateRequest) error {
 	}
 	// 注册同步处理方法
 	RegisterSyncHandle(GetRouter(), syncPath)
-	// TODO 注册异步处理方法
+	RegisterAsyncHandle(GetRouter(), p.Path)
 	return nil
 }
 
@@ -66,10 +67,11 @@ func (s *endpointService) Update(p request.EndpointUpdateRequest) error {
 	}
 
 	SqliteDb().Model(&model.Endpoint{}).Where("id = ?", p.Id).Updates(map[string]interface{}{
-		"api_json":    p.ApiJson,
-		"description": p.Description,
-		"workflow":    p.Workflow,
-		"updated_at":  time.Now(),
+		"api_json":     p.ApiJson,
+		"description":  p.Description,
+		"workflow":     p.Workflow,
+		"callback_url": p.CallbackUrl,
+		"updated_at":   time.Now(),
 	})
 
 	return nil
@@ -84,6 +86,10 @@ func (s *endpointService) Index(p request.EndpointIndexRequest) (data response.E
 
 	if p.Description != "" {
 		db = db.Where("description LIKE ?", "%"+p.Description+"%")
+	}
+
+	if p.CallbackUrl != "" {
+		db = db.Where("callback_url LIKE ?", "%"+p.CallbackUrl+"%")
 	}
 
 	db.Count(&data.Total)

@@ -3,45 +3,38 @@ package service
 import (
 	"comfyui_endpoint/client"
 	"comfyui_endpoint/model"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/sjson"
 )
 
-var syncPromptMap = make(map[string]chan struct{ FileName string })
-var syncPromptMapMutex = sync.RWMutex{} // 添加读写锁
+var asyncPromptMap = make(map[string]chan struct {
+	CallbackUrl string
+	Addr        string
+})
+var asyncPromptMapMutex = sync.RWMutex{} // 添加读写锁
 
-// 服务启动时初始化
-func InitSyncHandle(r *gin.Engine) {
+func InitAsyncHandle(r *gin.Engine) {
 	var list []model.Endpoint
 	SqliteDb().Model(&model.Endpoint{}).Find(&list)
 
 	for _, v := range list {
-		RegisterSyncHandle(r, v.SyncPath)
+		RegisterAsyncHandle(r, v.Path)
 	}
 }
 
-func RegisterSyncHandle(r *gin.Engine, path string) {
-	r.POST(path, SyncHandle)
+func RegisterAsyncHandle(r *gin.Engine, path string) {
+	r.POST(path, AsyncHandle)
 }
 
-func SyncHandle(ctx *gin.Context) {
-	// 等待ws告知执行完成
-	// 获取图片文件二进制数据
-	// 返回二进制数据
+func AsyncHandle(ctx *gin.Context) {
 	path := strings.TrimPrefix(ctx.FullPath(), "/")
-	path = strings.TrimSuffix(path, "/sync")
-	// 通过path找到endpoint
-	// 拼接参数
-	// 调用comfy 获取prompt_id
-	// 等待数据
+
 	var params = make(map[string]interface{})
 	err := ctx.ShouldBindJSON(&params)
 
@@ -88,9 +81,24 @@ func SyncHandle(ctx *gin.Context) {
 		})
 		return
 	}
+
 	for k, v := range params {
 		switch k {
 		case "uid":
+		case "callback_url":
+			callbackUrl, ok := v.(string)
+
+			if !ok && endpoint.CallbackUrl == "" {
+				ctx.JSON(http.StatusOK, gin.H{
+					"code":    500,
+					"message": fmt.Sprintf("%s [%s]", "找不到对应callbackUrl", path),
+					"data":    "",
+				})
+				return
+			}
+			if callbackUrl != "" {
+				endpoint.CallbackUrl = callbackUrl
+			}
 		default:
 			// 其他参数用于修改json文件
 			endpointParam, err := NewEndpointParamService().FindOne(path, k)
@@ -112,13 +120,20 @@ func SyncHandle(ctx *gin.Context) {
 				})
 				return
 			}
-
 		}
+	}
+
+	if endpoint.CallbackUrl == "" {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": fmt.Sprintf("%s [%s]", "找不到对应callbackUrl", path),
+			"data":    "",
+		})
+		return
 	}
 
 	var apiJsonMap = make(map[string]interface{})
 	json.Unmarshal([]byte(endpoint.ApiJson), &apiJsonMap)
-	fmt.Println(apiJsonMap)
 
 	promptResp, err := client.RestyClient.R().SetBody(map[string]interface{}{
 		"prompt": apiJsonMap,
@@ -147,60 +162,23 @@ func SyncHandle(ctx *gin.Context) {
 		})
 		return
 	}
-	syncPromptMapMutex.Lock()
-	resultChan := make(chan struct {
-		FileName string
+	asyncPromptMapMutex.Lock()
+	asyncPromptMap[promptRespData.PromptId] = make(chan struct {
+		CallbackUrl string
+		Addr        string
 	}, 1)
-	syncPromptMap[promptRespData.PromptId] = resultChan
-	syncPromptMapMutex.Unlock()
-	// 等待数据
-	var res struct {
-		FileName string
-	}
-	select {
-	case res = <-resultChan:
-		// 正常处理
-		syncPromptMapMutex.Lock()
-		delete(syncPromptMap, promptRespData.PromptId)
-		close(resultChan)
-		syncPromptMapMutex.Unlock()
-	case <-time.After(60 * time.Second):
-		syncPromptMapMutex.Lock()
-		delete(syncPromptMap, promptRespData.PromptId)
-		close(resultChan)
-		syncPromptMapMutex.Unlock()
-		ctx.JSON(http.StatusOK, gin.H{
-			"code":    500,
-			"message": "等待超时",
-			"data":    "",
-		})
-		return
-	}
-
-	// 处理接收到的数据
-	imgResp, err := client.RestyClient.R().Get(fmt.Sprintf("http://%s/view?filename=%s", comfyApp.Addr, res.FileName))
-
-	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{
-			"code":    500,
-			"message": fmt.Sprintf("获取图片失败: %s", err.Error()),
-			"data":    "",
-		})
-		return
-	}
-
-	// 将图片数据转换为base64字符串
-	imageBase64 := base64.StdEncoding.EncodeToString(imgResp.Body())
+	asyncPromptMap[promptRespData.PromptId] <- struct {
+		CallbackUrl string
+		Addr        string
+	}{CallbackUrl: endpoint.CallbackUrl, Addr: comfyApp.Addr}
+	asyncPromptMapMutex.Unlock()
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"code":    200,
-		"message": "获取图片成功",
+		"message": "任务创建成功",
 		"data": map[string]interface{}{
-			"file_name":          res.FileName,
-			"prompt_id":          promptRespData.PromptId,
-			"uri":                fmt.Sprintf("http://%s/view?filename=%s", comfyApp.Addr, res.FileName),
-			"uid":                comfyApp.Uid,
-			"binary_data_base64": []string{imageBase64},
+			"prompt_id": promptRespData.PromptId,
+			"uid":       comfyApp.Uid,
 		},
 	})
 }

@@ -4,8 +4,8 @@ definitions:
       api_json:
         description: comfyUI api用工作流
         type: string
-      app_uid:
-        description: 暂时无用，多服务器时可以指定appUid
+      callback_url:
+        description: http://127.0.0.1:8080/api/v1/callback
         type: string
       created_at:
         type: string
@@ -88,6 +88,9 @@ definitions:
       api_json:
         description: comfy api版本json
         type: string
+      callback_url:
+        description: 回调地址 example http://127.0.0.1:9999/v1/callback
+        type: string
       description:
         description: 描述
         type: string
@@ -100,6 +103,9 @@ definitions:
     type: object
   request.EndpointIndexRequest:
     properties:
+      callback_url:
+        description: 回调地址 example http://127.0.0.1:9999/v1/callback
+        type: string
       description:
         type: string
       page:
@@ -136,6 +142,23 @@ definitions:
         items:
           $ref: '#/definitions/request.EndpointParamItemRequest'
         type: array
+    type: object
+  request.EndpointUpdateRequest:
+    properties:
+      api_json:
+        description: comfy api版本json
+        type: string
+      callback_url:
+        description: 回调地址 example http://127.0.0.1:9999/v1/callback
+        type: string
+      description:
+        description: 描述
+        type: string
+      id:
+        type: integer
+      workflow:
+        description: comfy 工作流
+        type: string
     type: object
   response.ComfyAppCreateResponseItem:
     properties:
@@ -365,7 +388,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/request.EndpointCreateRequest'
+          $ref: '#/definitions/request.EndpointUpdateRequest'
       produces:
       - application/json
       responses:

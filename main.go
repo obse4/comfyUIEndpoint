@@ -76,6 +76,7 @@ func main() {
 	}
 
 	service.InitSyncHandle(router)
+	service.InitAsyncHandle(router)
 
 	var port string
 	flag.StringVar(&port, "p", "9518", "server port")

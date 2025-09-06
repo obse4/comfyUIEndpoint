@@ -1,10 +1,6 @@
 # ComfyUI Endpoint (comfyUI 工作流自动化端点)
 本项目为comfyUI工作流接口化调用服务，旨在实现comfy工作流端点接入与配置
 
-## TODO-LIST
-1. 异步方法实现
-2. 异步回调实现
-
 ## 快速开始
 1. golang环境
 2. 运行 `go mod tidy` 
@@ -108,3 +104,25 @@ Content-Length: 627
     ```
     
     **注意：** uid为comfy应用的uid，必填项，其余参数为步骤3创建的端点参数
+
+5. 获取http路由，异步调用http接口
+  - 获取http路由 `http://127.0.0.1:9518/swagger/index.html#/Endpoint/post_endpoint_index` 异步路由字段`path`，字段`path`
+  - 异步调用http接口，参照步骤2对应创建字段`path`，示例对应api为`http://127.0.0.1:9518/workflow/test`
+  - 
+  ```HTTP
+  POST /workflow/test HTTP/1.1
+  Host: 127.0.0.1:9518
+  Content-Type: application/json
+  Content-Length: 180
+
+  {
+      "uid": "1a9828d7-2e83-49f0-9b28-e64443e25a90",
+      "prompt": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+      "width": 400,
+      "height": 400,
+      "callback_url": "http://127.0.0.1:9999/workflow/test/callback"
+
+  }
+  ```
+  
+  **注意：** uid为comfy应用的uid必填项，callback_url为自定义的POST回调地址、非必填项（优先于endpoint创建时写入的callback_url），其余参数为步骤3创建的端点参数
